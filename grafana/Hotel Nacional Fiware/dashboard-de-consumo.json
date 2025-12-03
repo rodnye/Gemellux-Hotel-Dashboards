@@ -1,0 +1,524 @@
+{
+  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "adckz8n"
+  },
+  "spec": {
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations \u0026 Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "panels": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "bf54fcon0u800e"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "continuous-RdYlGr"
+            },
+            "custom": {
+              "axisBorderShow": false,
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "fillOpacity": 48,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineWidth": 0,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                }
+              ]
+            },
+            "unit": "none"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 11,
+          "w": 6,
+          "x": 5,
+          "y": 0
+        },
+        "id": 2,
+        "options": {
+          "barRadius": 0.05,
+          "barWidth": 0.98,
+          "colorByField": "Anual",
+          "fullHighlight": true,
+          "groupWidth": 0.7,
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": false
+          },
+          "orientation": "vertical",
+          "showValue": "always",
+          "stacking": "none",
+          "tooltip": {
+            "hideZeros": false,
+            "mode": "single",
+            "sort": "none"
+          },
+          "xField": "type",
+          "xTickLabelRotation": 0,
+          "xTickLabelSpacing": 0
+        },
+        "pluginVersion": "12.1.1",
+        "targets": [
+          {
+            "csvContent": "Tipo,Valor\nReal,4.3\nPlan,2.4\nReal AA,2",
+            "datasource": {
+              "type": "grafana-testdata-datasource",
+              "uid": "bf4278l56vabkf"
+            },
+            "dropPercent": 0,
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "WITH vars AS (\n  SELECT\n    '$carrier_type' AS carrierType,\n    '$period' AS period,\n    to_timestamp($__from / 1000) :: date AS date_from,\n    to_timestamp($__to / 1000) :: date AS date_to\n),\nparsed AS (\n  SELECT\n    to_timestamp((o.recvtimets) :: bigint / 1000) AS recvtimets,\n    o.dateobserved :: date AS dateobserved,\n    c AS carrier\n  FROM\n    gemelluxiot.x002fconsumptionobserved o\n    CROSS JOIN LATERAL jsonb_array_elements(o.carriers :: jsonb) AS c\n    CROSS JOIN vars v\n  WHERE\n    c -\u003e\u003e 'carrierType' = v.carrierType\n    AND o.dateobserved :: date BETWEEN v.date_from\n    AND v.date_to\n),\nvalues_raw AS (\n  SELECT\n    (carrier -\u003e\u003e 'coverage') :: int AS coverage,\n    '(' || (carrier -\u003e\u003e 'unit') || ')' AS unit,\n    v.period AS period,\n    CASE v.period\n        WHEN 'day'   THEN to_char(recvtimets, 'DD/MM/YYYY')\n        WHEN 'month' THEN to_char(recvtimets, 'TMMonth YYYY')\n        WHEN 'year'  THEN to_char(recvtimets, 'YYYY')\n    END AS formated_date,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearPlan') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthPlan') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayPlan') :: numeric\n    END AS plan_value,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearReal') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthReal') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayReal') :: numeric\n    END AS real_value,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearRealLastYear') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthRealLastYear') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayRealLastYear') :: numeric\n    END AS real_last_year\n  FROM\n    parsed\n    CROSS JOIN vars v\n  ORDER BY\n    recvtimets\n  LIMIT\n    1\n)\nSELECT\n  'Real ' || unit AS type,\n  real_value AS value,\n  formated_date\nFROM\n  values_raw\nUNION\nALL\nSELECT\n  'Plan ' || unit,\n  plan_value AS value,\n  formated_date\nFROM\n  values_raw\nUNION\nALL\nSELECT\n  'Real AA ' || unit,\n  real_last_year AS value,\n  formated_date \nFROM\n  values_raw\n",
+            "refId": "A",
+            "scenarioId": "csv_content",
+            "sql": {
+              "columns": [
+                {
+                  "parameters": [],
+                  "type": "function"
+                }
+              ],
+              "groupBy": [
+                {
+                  "property": {
+                    "type": "string"
+                  },
+                  "type": "groupBy"
+                }
+              ],
+              "limit": 50
+            }
+          }
+        ],
+        "title": "Consumo de ${carrier_type:text}",
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "includeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "type": " ",
+                "value": "${period:text}"
+              }
+            }
+          }
+        ],
+        "type": "barchart"
+      },
+      {
+        "datasource": {
+          "type": "datasource",
+          "uid": "-- Dashboard --"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "fixedColor": "transparent",
+              "mode": "fixed"
+            },
+            "fieldMinMax": true,
+            "mappings": [],
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "transparent",
+                  "value": 0
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 2,
+          "w": 7,
+          "x": 11,
+          "y": 0
+        },
+        "id": 8,
+        "options": {
+          "infinitePan": false,
+          "inlineEditing": false,
+          "panZoom": false,
+          "root": {
+            "background": {
+              "color": {
+                "fixed": "transparent"
+              },
+              "size": "cover"
+            },
+            "border": {
+              "color": {
+                "fixed": "dark-green"
+              }
+            },
+            "constraint": {
+              "horizontal": "left",
+              "vertical": "top"
+            },
+            "elements": [
+              {
+                "background": {
+                  "color": {
+                    "field": "formated_date",
+                    "fixed": "#D9D9D9"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "align": "left",
+                  "color": {
+                    "fixed": "text"
+                  },
+                  "size": 20,
+                  "text": {
+                    "field": "formated_date",
+                    "fixed": "",
+                    "mode": "field"
+                  },
+                  "valign": "middle"
+                },
+                "connections": [],
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 1",
+                "placement": {
+                  "height": 50,
+                  "left": -85,
+                  "rotation": 0,
+                  "top": -1,
+                  "width": 221
+                },
+                "type": "metric-value"
+              },
+              {
+                "background": {
+                  "color": {
+                    "fixed": "transparent"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "align": "left",
+                  "color": {
+                    "fixed": "text"
+                  },
+                  "size": 20,
+                  "text": {
+                    "fixed": "Período"
+                  },
+                  "valign": "middle"
+                },
+                "connections": [],
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 3",
+                "placement": {
+                  "height": 50,
+                  "left": 59.5,
+                  "rotation": 0,
+                  "top": -1,
+                  "width": 100
+                },
+                "type": "text"
+              },
+              {
+                "background": {
+                  "color": {
+                    "fixed": "transparent"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "fill": {
+                    "fixed": "text"
+                  },
+                  "path": {
+                    "fixed": "img/icons/unicons/calendar-alt.svg",
+                    "mode": "fixed"
+                  }
+                },
+                "connections": [],
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 4",
+                "placement": {
+                  "height": 26,
+                  "left": 126,
+                  "top": -1,
+                  "width": 33
+                },
+                "type": "icon"
+              }
+            ],
+            "name": "Element 1764704150401",
+            "placement": {
+              "height": 100,
+              "left": 0,
+              "rotation": 0,
+              "top": 0,
+              "width": 100
+            },
+            "type": "frame"
+          },
+          "showAdvancedTypes": true
+        },
+        "pluginVersion": "12.1.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "datasource",
+              "uid": "-- Dashboard --"
+            },
+            "panelId": 2,
+            "refId": "A"
+          }
+        ],
+        "title": "",
+        "transformations": [
+          {
+            "id": "formatTime",
+            "options": {
+              "outputFormat": "DD/MM/YYYY",
+              "timeField": "recvtimets",
+              "useTimezone": true
+            }
+          }
+        ],
+        "type": "canvas"
+      },
+      {
+        "datasource": {
+          "type": "datasource",
+          "uid": "-- Dashboard --"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "cellOptions": {
+                "type": "auto"
+              },
+              "inspect": false
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 5,
+          "w": 7,
+          "x": 11,
+          "y": 2
+        },
+        "id": 3,
+        "options": {
+          "cellHeight": "sm",
+          "footer": {
+            "countRows": false,
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "type"
+            }
+          ]
+        },
+        "pluginVersion": "12.1.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "datasource",
+              "uid": "-- Dashboard --"
+            },
+            "panelId": 2,
+            "refId": "A",
+            "withTransforms": true
+          }
+        ],
+        "title": "",
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "formated_date": true,
+                "recvtimets": true
+              },
+              "includeByName": {},
+              "indexByName": {},
+              "renameByName": {}
+            }
+          }
+        ],
+        "type": "table"
+      }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "text": "month",
+            "value": "month"
+          },
+          "label": "Periodo:",
+          "name": "period",
+          "options": [
+            {
+              "selected": false,
+              "text": "Diario",
+              "value": "day"
+            },
+            {
+              "selected": true,
+              "text": "Mensual",
+              "value": "month"
+            },
+            {
+              "selected": false,
+              "text": "Anual",
+              "value": "year"
+            }
+          ],
+          "query": "Diario : day, Mensual : month, Anual : year",
+          "type": "custom"
+        },
+        {
+          "current": {
+            "text": "boilerDiesel",
+            "value": "boilerDiesel"
+          },
+          "label": "Tipo",
+          "name": "carrier_type",
+          "options": [
+            {
+              "selected": false,
+              "text": "Electricidad",
+              "value": "electricity"
+            },
+            {
+              "selected": false,
+              "text": "Agua",
+              "value": "water"
+            },
+            {
+              "selected": false,
+              "text": "Gas",
+              "value": "liquefiedPetroleumGas"
+            },
+            {
+              "selected": true,
+              "text": "Diesel",
+              "value": "boilerDiesel"
+            }
+          ],
+          "query": "Electricidad : electricity,Agua : water,Gas : liquefiedPetroleumGas,Diesel : boilerDiesel",
+          "type": "custom"
+        }
+      ]
+    },
+    "time": {
+      "from": "2025-09-14T04:00:00.000Z",
+      "to": "2025-09-16T03:59:59.000Z"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Dashboard de Consumo"
+  }
+}
