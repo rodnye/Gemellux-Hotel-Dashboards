@@ -6,6 +6,9 @@
 
 Sistema de visualización de consumos energéticos para el Hotel Nacional de Cuba. Monitorea en tiempo real el consumo de electricidad, agua, gas y diesel, con alertas de cobertura.
 
+> [!note]
+> *Este proyecto no posee información sensible ni expone el funcionamiento interno de la institución, solo posee la visualización y diseños sugeridos con consultas a una database mockeada*
+
 ## Dashboards
 
 ### 1. Dashboard de Cobertura
