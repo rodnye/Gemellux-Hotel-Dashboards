@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "apiVersion": "dashboard.grafana.app/v1beta1",
   "kind": "Dashboard",
   "metadata": {
     "name": "adckz8n"
@@ -42,7 +42,7 @@
               "axisColorMode": "text",
               "axisLabel": "",
               "axisPlacement": "auto",
-              "fillOpacity": 48,
+              "fillOpacity": 100,
               "gradientMode": "none",
               "hideFrom": {
                 "legend": false,
@@ -57,7 +57,38 @@
                 "mode": "off"
               }
             },
-            "mappings": [],
+            "fieldMinMax": false,
+            "mappings": [
+              {
+                "options": {
+                  "": {
+                    "color": "#868686",
+                    "index": 0
+                  }
+                },
+                "type": "value"
+              },
+              {
+                "options": {
+                  "from": 0,
+                  "result": {
+                    "color": "green",
+                    "index": 1
+                  }
+                },
+                "type": "range"
+              },
+              {
+                "options": {
+                  "result": {
+                    "color": "red",
+                    "index": 2
+                  },
+                  "to": 0
+                },
+                "type": "range"
+              }
+            ],
             "thresholds": {
               "mode": "absolute",
               "steps": [
@@ -81,7 +112,7 @@
         "options": {
           "barRadius": 0.05,
           "barWidth": 0.98,
-          "colorByField": "Anual",
+          "colorByField": "percent_change",
           "fullHighlight": true,
           "groupWidth": 0.7,
           "legend": {
@@ -114,7 +145,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "WITH vars AS (\n  SELECT\n    '$carrier_type' AS carrierType,\n    '$period' AS period,\n    to_timestamp($__from / 1000) :: date AS date_from,\n    to_timestamp($__to / 1000) :: date AS date_to\n),\nparsed AS (\n  SELECT\n    to_timestamp((o.recvtimets) :: bigint / 1000) AS recvtimets,\n    o.dateobserved :: date AS dateobserved,\n    c AS carrier\n  FROM\n    gemelluxiot.x002fconsumptionobserved o\n    CROSS JOIN LATERAL jsonb_array_elements(o.carriers :: jsonb) AS c\n    CROSS JOIN vars v\n  WHERE\n    c -\u003e\u003e 'carrierType' = v.carrierType\n    AND o.dateobserved :: date BETWEEN v.date_from\n    AND v.date_to\n),\nvalues_raw AS (\n  SELECT\n    (carrier -\u003e\u003e 'coverage') :: int AS coverage,\n    '(' || (carrier -\u003e\u003e 'unit') || ')' AS unit,\n    v.period AS period,\n    CASE v.period\n        WHEN 'day'   THEN to_char(recvtimets, 'DD/MM/YYYY')\n        WHEN 'month' THEN to_char(recvtimets, 'TMMonth YYYY')\n        WHEN 'year'  THEN to_char(recvtimets, 'YYYY')\n    END AS formated_date,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearPlan') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthPlan') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayPlan') :: numeric\n    END AS plan_value,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearReal') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthReal') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayReal') :: numeric\n    END AS real_value,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearRealLastYear') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthRealLastYear') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayRealLastYear') :: numeric\n    END AS real_last_year\n  FROM\n    parsed\n    CROSS JOIN vars v\n  ORDER BY\n    recvtimets\n  LIMIT\n    1\n)\nSELECT\n  'Real ' || unit AS type,\n  real_value AS value,\n  formated_date\nFROM\n  values_raw\nUNION\nALL\nSELECT\n  'Plan ' || unit,\n  plan_value AS value,\n  formated_date\nFROM\n  values_raw\nUNION\nALL\nSELECT\n  'Real AA ' || unit,\n  real_last_year AS value,\n  formated_date \nFROM\n  values_raw\n",
+            "rawSql": "WITH vars AS (\n  SELECT\n    '$carrier_type' AS carrierType,\n    '$period' AS period,\n    to_timestamp($__from / 1000) :: date AS date_from,\n    to_timestamp($__to / 1000) :: date AS date_to\n),\nparsed AS (\n  SELECT\n    to_timestamp((o.recvtimets) :: bigint / 1000) AS recvtimets,\n    o.dateobserved :: date AS dateobserved,\n    c AS carrier\n  FROM\n    gemelluxiot.x002fconsumptionobserved o\n    CROSS JOIN LATERAL jsonb_array_elements(o.carriers :: jsonb) AS c\n    CROSS JOIN vars v\n  WHERE\n    c -\u003e\u003e 'carrierType' = v.carrierType\n    AND o.dateobserved :: date BETWEEN v.date_from\n    AND v.date_to\n),\nvalues_raw AS (\n  SELECT\n    (carrier -\u003e\u003e 'coverage') :: int AS coverage,\n    '(' || (carrier -\u003e\u003e 'unit') || ')' AS unit,\n    v.period AS period,\n    CASE v.period\n        WHEN 'day'   THEN to_char(recvtimets, 'DD/MM/YYYY')\n        WHEN 'month' THEN to_char(recvtimets, 'TMMonth YYYY')\n        WHEN 'year'  THEN to_char(recvtimets, 'YYYY')\n    END AS formated_date,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearPlan') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthPlan') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayPlan') :: numeric\n    END AS plan_value,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearReal') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthReal') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayReal') :: numeric\n    END AS real_value,\n    CASE\n      v.period\n      WHEN 'year' THEN (carrier -\u003e\u003e 'yearRealLastYear') :: numeric\n      WHEN 'month' THEN (carrier -\u003e\u003e 'monthRealLastYear') :: numeric\n      WHEN 'day' THEN (carrier -\u003e\u003e 'dayRealLastYear') :: numeric\n    END AS real_last_year\n  FROM\n    parsed\n    CROSS JOIN vars v\n  ORDER BY\n    recvtimets\n  LIMIT\n    1\n),\ncalculated_values AS (\n  SELECT\n    *,\n    CASE \n      WHEN real_value \u003e 0 THEN\n        ROUND(((plan_value - real_value) / real_value) * 100, 1)\n      ELSE 0\n    END AS percent_vs_real_plan,\n    CASE \n      WHEN real_value \u003e 0 THEN\n        ROUND(((real_last_year - real_value) / real_value) * 100, 1)\n      ELSE 0\n    END AS percent_vs_real_last_year,\n\n    CASE \n      WHEN plan_value \u003e real_value THEN\n        CASE \n          WHEN ABS(plan_value - real_value) / NULLIF(plan_value, 0) \u003c 0.05 \n            THEN 'Consumo ligeramente inferior al plan'\n          WHEN ABS(plan_value - real_value) / NULLIF(plan_value, 0) \u003c 0.15 \n            THEN 'Consumo moderadamente inferior al plan'\n          ELSE 'Consumo significativamente inferior al plan'\n        END\n      WHEN plan_value \u003c real_value THEN\n        CASE \n          WHEN ABS(real_value - plan_value) / NULLIF(plan_value, 0) \u003c 0.05 \n            THEN 'Consumo ligeramente superior al plan'\n          WHEN ABS(real_value - plan_value) / NULLIF(plan_value, 0) \u003c 0.15 \n            THEN 'Consumo moderadamente superior al plan'\n          ELSE 'Consumo significativamente superior al plan'\n        END\n      ELSE 'Consumo alineado con el plan'\n    END AS vs_plan_message,\n\n    CASE \n      WHEN real_last_year \u003e real_value THEN\n        CASE \n          WHEN ABS(real_last_year - real_value) / NULLIF(real_last_year, 0) \u003c 0.05 \n            THEN 'Consumo ligeramente inferior al año pasado'\n          WHEN ABS(real_last_year - real_value) / NULLIF(real_last_year, 0) \u003c 0.15 \n            THEN 'Consumo moderadamente inferior al año pasado'\n          ELSE 'Consumo significativamente inferior al año pasado'\n        END\n      WHEN real_last_year \u003c real_value THEN\n        CASE \n          WHEN ABS(real_value - real_last_year) / NULLIF(real_last_year, 0) \u003c 0.05 \n            THEN 'Consumo ligeramente superior al año pasado'\n          WHEN ABS(real_value - real_last_year) / NULLIF(real_last_year, 0) \u003c 0.15 \n            THEN 'Consumo moderadamente superior al año pasado'\n          ELSE 'Consumo significativamente superior al año pasado'\n        END\n      ELSE 'Consumo similar al del año pasado'\n    END AS vs_last_year_message,\n    -- Versiones cortas para tooltips o espacios reducidos\n    CASE \n      WHEN plan_value \u003e real_value THEN 'Por debajo del plan'\n      WHEN plan_value \u003c real_value THEN 'Por encima del plan'\n      ELSE 'Alineado con plan'\n    END AS vs_plan_short,\n    CASE \n      WHEN real_last_year \u003e real_value THEN 'Por debajo del año anterior'\n      WHEN real_last_year \u003c real_value THEN 'Por encima del año anterior'\n      ELSE 'Similar al año anterior'\n    END AS vs_last_year_short\n  FROM\n    values_raw\n)\nSELECT\n  'Real ' || unit AS type,\n  real_value AS value,\n  formated_date,\n  '' AS percent_change,\n  0 AS percent,\n  '' AS comparison_message,\n  'Consumo actual' AS comparison_status\nFROM\n  calculated_values\nUNION ALL\nSELECT\n  'Plan ' || unit,\n  plan_value AS value,\n  formated_date,\n  CASE \n    WHEN percent_vs_real_plan \u003e 0 THEN '+' || percent_vs_real_plan::text || '% ▲'\n    WHEN percent_vs_real_plan \u003c 0 THEN '-' || (percent_vs_real_plan * -1)::text || '% ▼'\n    ELSE '0.0%'\n  END AS percent_change,\n  percent_vs_real_plan AS percent,\n  vs_plan_message AS comparison_message,\n  vs_plan_short AS comparison_status\nFROM\n  calculated_values\nUNION ALL\nSELECT\n  'Real AA ' || unit,\n  real_last_year AS value,\n  formated_date,\n  CASE \n    WHEN percent_vs_real_last_year \u003e 0 THEN '+' || percent_vs_real_last_year::text || '% ▲'\n    WHEN percent_vs_real_last_year \u003c 0 THEN '-' || (percent_vs_real_last_year * -1)::text || '% ▼'\n    ELSE '0.0%'\n  END AS percent_change,\n  percent_vs_real_last_year AS percent,\n  vs_last_year_message AS comparison_message,\n  vs_last_year_short AS comparison_status\nFROM\n  calculated_values",
             "refId": "A",
             "scenarioId": "csv_content",
             "sql": {
@@ -141,10 +172,18 @@
           {
             "id": "organize",
             "options": {
-              "excludeByName": {},
+              "excludeByName": {
+                "formated_date": false,
+                "percent": true,
+                "percent_change": false
+              },
               "includeByName": {},
               "indexByName": {},
               "renameByName": {
+                "comparison_message": "Comparación",
+                "comparison_status": "Estado",
+                "formated_date": "Fecha de consulta",
+                "percent_change": "Porcentaje",
                 "type": " ",
                 "value": "${period:text}"
               }
@@ -181,7 +220,7 @@
         },
         "gridPos": {
           "h": 2,
-          "w": 7,
+          "w": 8,
           "x": 11,
           "y": 0
         },
@@ -363,10 +402,12 @@
           "type": "datasource",
           "uid": "-- Dashboard --"
         },
+        "description": "Tabla de valores y comparativa porcentual con respecto a los valores reales.\n\n- Verde: El valor está por encima del consumo\n- Rojo: El valor está por debajo del consumo",
         "fieldConfig": {
           "defaults": {
             "color": {
-              "mode": "thresholds"
+              "fixedColor": "red",
+              "mode": "fixed"
             },
             "custom": {
               "align": "auto",
@@ -382,19 +423,87 @@
                 {
                   "color": "green",
                   "value": 0
-                },
-                {
-                  "color": "red",
-                  "value": 80
                 }
               ]
             }
           },
-          "overrides": []
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "value"
+              },
+              "properties": [
+                {
+                  "id": "custom.width",
+                  "value": 90
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "percent_change"
+              },
+              "properties": [
+                {
+                  "id": "custom.align",
+                  "value": "right"
+                },
+                {
+                  "id": "custom.cellOptions",
+                  "value": {
+                    "type": "color-text"
+                  }
+                },
+                {
+                  "id": "unit",
+                  "value": "string"
+                },
+                {
+                  "id": "color"
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "options": {
+                        "0": {
+                          "color": "text",
+                          "index": 0
+                        }
+                      },
+                      "type": "value"
+                    },
+                    {
+                      "options": {
+                        "from": 0,
+                        "result": {
+                          "color": "dark-green",
+                          "index": 1
+                        }
+                      },
+                      "type": "range"
+                    },
+                    {
+                      "options": {
+                        "result": {
+                          "color": "red",
+                          "index": 2
+                        },
+                        "to": 0
+                      },
+                      "type": "range"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         "gridPos": {
-          "h": 5,
-          "w": 7,
+          "h": 9,
+          "w": 8,
           "x": 11,
           "y": 2
         },
@@ -410,12 +519,7 @@
             "show": false
           },
           "showHeader": true,
-          "sortBy": [
-            {
-              "desc": true,
-              "displayName": "type"
-            }
-          ]
+          "sortBy": []
         },
         "pluginVersion": "12.1.1",
         "targets": [
@@ -429,22 +533,69 @@
             "withTransforms": true
           }
         ],
-        "title": "",
+        "title": "Tabla de valores",
         "transformations": [
           {
             "id": "organize",
             "options": {
               "excludeByName": {
+                "Fecha de consulta": false,
+                "color": true,
+                "comparison_message": true,
+                "comparison_status": true,
                 "formated_date": true,
                 "recvtimets": true
               },
               "includeByName": {},
-              "indexByName": {},
-              "renameByName": {}
+              "indexByName": {
+                " ": 0,
+                "Comparación": 4,
+                "Estado": 5,
+                "Fecha de consulta": 1,
+                "Mensual": 3,
+                "Porcentaje": 2
+              },
+              "renameByName": {
+                "Porcentage": " ",
+                "Porcentaje": " "
+              }
+            }
+          },
+          {
+            "id": "formatString",
+            "options": {
+              "outputFormat": "Upper Case",
+              "stringField": ""
             }
           }
         ],
         "type": "table"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 2,
+          "w": 15,
+          "x": 9,
+          "y": 11
+        },
+        "id": 9,
+        "options": {
+          "code": {
+            "language": "plaintext",
+            "showLineNumbers": false,
+            "showMiniMap": false
+          },
+          "content": "\u003ca style=\"font-size:0.7rem; display:flex; justify-content:end; align-items:center\" href=\"https://gemellux.com/\"\u003e\n  \u003cimg width=\"25\" src=\"https://gemellux.com/wp-content/uploads/2024/05/03-Vertical-sin-Generico-ni-nombre-solo-Logo-2-tintas-agrandado.png\"\u003e\n  \u003cp style=\"padding-left:0.3rem\"\u003eDesarrollado por Gemellux\u003c/p\u003e\n\u003c/a\u003e",
+          "mode": "html"
+        },
+        "pluginVersion": "12.1.1",
+        "title": "",
+        "transparent": true,
+        "type": "text"
       }
     ],
     "preload": false,
@@ -454,19 +605,19 @@
       "list": [
         {
           "current": {
-            "text": "month",
-            "value": "month"
+            "text": "day",
+            "value": "day"
           },
           "label": "Periodo:",
           "name": "period",
           "options": [
             {
-              "selected": false,
+              "selected": true,
               "text": "Diario",
               "value": "day"
             },
             {
-              "selected": true,
+              "selected": false,
               "text": "Mensual",
               "value": "month"
             },
@@ -481,14 +632,14 @@
         },
         {
           "current": {
-            "text": "boilerDiesel",
-            "value": "boilerDiesel"
+            "text": "electricity",
+            "value": "electricity"
           },
           "label": "Tipo",
           "name": "carrier_type",
           "options": [
             {
-              "selected": false,
+              "selected": true,
               "text": "Electricidad",
               "value": "electricity"
             },
@@ -503,7 +654,7 @@
               "value": "liquefiedPetroleumGas"
             },
             {
-              "selected": true,
+              "selected": false,
               "text": "Diesel",
               "value": "boilerDiesel"
             }
