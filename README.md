@@ -17,7 +17,6 @@ Sistema de visualización de consumos energéticos para el Hotel Nacional de Cub
 - Medidor de porcentaje y valores reales
 
 ![](./screenshots/coverage.png)
-![](./screenshots/coverage_2.png)
 
 ### 2. Dashboard de Consumo
 - Monitoreo por tipo de energía
