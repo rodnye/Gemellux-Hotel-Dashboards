@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "apiVersion": "dashboard.grafana.app/v1beta1",
   "kind": "Dashboard",
   "metadata": {
     "name": "073f7eb4-d000-4211-baaa-157ca529a0bb"
@@ -31,7 +31,7 @@
           "type": "grafana-postgresql-datasource",
           "uid": "bf54fcon0u800e"
         },
-        "description": "Este grafico muestra el estado de cobertura de ${carrier_type}.\n\n- Verde: Suficiente\n- Rojo: Crítico",
+        "description": "Este grafico muestra el estado de cobertura de ${carrier_type:text}.\n\n- Verde: Suficiente\n- Rojo: Crítico",
         "fieldConfig": {
           "defaults": {
             "color": {
@@ -211,7 +211,7 @@
             "table": "gemelluxiot.x002fconsumptionobserved"
           }
         ],
-        "title": "Cobertura de ${carrier_type}",
+        "title": "Cobertura de ${carrier_type:text}",
         "type": "gauge"
       },
       {
@@ -249,7 +249,7 @@
         "id": 17,
         "options": {
           "infinitePan": false,
-          "inlineEditing": true,
+          "inlineEditing": false,
           "panZoom": false,
           "root": {
             "background": {
@@ -446,7 +446,7 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 4,
+          "h": 5,
           "w": 8,
           "x": 12,
           "y": 2
@@ -454,7 +454,7 @@
         "id": 15,
         "options": {
           "infinitePan": false,
-          "inlineEditing": true,
+          "inlineEditing": false,
           "panZoom": false,
           "root": {
             "background": {
@@ -704,12 +704,12 @@
           "h": 1,
           "w": 8,
           "x": 12,
-          "y": 6
+          "y": 7
         },
         "id": 13,
         "options": {
           "infinitePan": false,
-          "inlineEditing": false,
+          "inlineEditing": true,
           "panZoom": false,
           "root": {
             "background": {
@@ -755,14 +755,15 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 1",
                 "placement": {
                   "height": 50,
-                  "left": 153,
+                  "left": -39,
+                  "rotation": 0,
                   "top": 0,
                   "width": 81
                 },
@@ -792,16 +793,17 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 2",
                 "placement": {
                   "height": 50,
-                  "left": 42,
+                  "left": 68.49166870117188,
+                  "rotation": 0,
                   "top": 0,
-                  "width": 88
+                  "width": 88.01666259765625
                 },
                 "type": "text"
               },
@@ -827,14 +829,14 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 4",
                 "placement": {
                   "height": 38,
-                  "left": -3,
+                  "left": 130.5,
                   "rotation": 0,
                   "top": 0,
                   "width": 54
@@ -867,14 +869,15 @@
                   "valign": "middle"
                 },
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 5",
                 "placement": {
                   "height": 50,
-                  "left": 246,
+                  "left": -123.5,
+                  "rotation": 0,
                   "top": 0,
                   "width": 64
                 },
@@ -937,12 +940,12 @@
           "h": 1,
           "w": 8,
           "x": 12,
-          "y": 7
+          "y": 8
         },
-        "id": 18,
+        "id": 19,
         "options": {
           "infinitePan": false,
-          "inlineEditing": false,
+          "inlineEditing": true,
           "panZoom": false,
           "root": {
             "background": {
@@ -988,14 +991,15 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 1",
                 "placement": {
                   "height": 50,
-                  "left": 155,
+                  "left": -39,
+                  "rotation": 0,
                   "top": 0,
                   "width": 81
                 },
@@ -1025,17 +1029,17 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 2",
                 "placement": {
                   "height": 50,
-                  "left": 42,
+                  "left": 68.49166870117188,
                   "rotation": 0,
                   "top": 0,
-                  "width": 121
+                  "width": 88.01666259765625
                 },
                 "type": "text"
               },
@@ -1061,14 +1065,14 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 4",
                 "placement": {
                   "height": 38,
-                  "left": -3,
+                  "left": 130.5,
                   "rotation": 0,
                   "top": 0,
                   "width": 54
@@ -1101,14 +1105,15 @@
                   "valign": "middle"
                 },
                 "constraint": {
-                  "horizontal": "left",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 5",
                 "placement": {
                   "height": 50,
-                  "left": 244,
+                  "left": -123.5,
+                  "rotation": 0,
                   "top": 0,
                   "width": 64
                 },
@@ -1167,6 +1172,32 @@
           }
         ],
         "type": "canvas"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 2,
+          "w": 15,
+          "x": 9,
+          "y": 9
+        },
+        "id": 20,
+        "options": {
+          "code": {
+            "language": "plaintext",
+            "showLineNumbers": false,
+            "showMiniMap": false
+          },
+          "content": "\u003ca style=\"font-size:0.7rem; display:flex; justify-content:end; align-items:center\" href=\"https://gemellux.com/\"\u003e\n  \u003cimg width=\"25\" src=\"https://gemellux.com/wp-content/uploads/2024/05/03-Vertical-sin-Generico-ni-nombre-solo-Logo-2-tintas-agrandado.png\"\u003e\n  \u003cp style=\"padding-left:0.3rem\"\u003eDesarrollado por Gemellux\u003c/p\u003e\n\u003c/a\u003e",
+          "mode": "html"
+        },
+        "pluginVersion": "12.1.1",
+        "title": "",
+        "transparent": true,
+        "type": "text"
       }
     ],
     "preload": false,
@@ -1184,6 +1215,11 @@
           "name": "carrier_type",
           "options": [
             {
+              "selected": true,
+              "text": "Diesel",
+              "value": "boilerDiesel"
+            },
+            {
               "selected": false,
               "text": "Agua",
               "value": "water"
@@ -1192,11 +1228,6 @@
               "selected": false,
               "text": "Gas",
               "value": "liquefiedPetroleumGas"
-            },
-            {
-              "selected": true,
-              "text": "Diesel",
-              "value": "boilerDiesel"
             }
           ],
           "query": "Diesel : boilerDiesel, Agua : water, Gas : liquefiedPetroleumGas",
