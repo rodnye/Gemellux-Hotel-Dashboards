@@ -1,5 +1,5 @@
 {
-  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "apiVersion": "dashboard.grafana.app/v1beta1",
   "kind": "Dashboard",
   "metadata": {
     "name": "34841210-28a7-49c3-b1dd-4e6e59dc5997"
@@ -29,6 +29,140 @@
     "panels": [
       {
         "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "bf54fcon0u800e"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "fixedColor": "orange",
+              "mode": "palette-classic-by-name"
+            },
+            "custom": {
+              "axisBorderShow": false,
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "fillOpacity": 100,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineWidth": 0,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                }
+              ]
+            },
+            "unit": "none"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 11,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "id": 2,
+        "options": {
+          "barRadius": 0.05,
+          "barWidth": 0.95,
+          "fullHighlight": true,
+          "groupWidth": 0.71,
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "right",
+            "showLegend": true
+          },
+          "orientation": "horizontal",
+          "showValue": "always",
+          "stacking": "none",
+          "tooltip": {
+            "hideZeros": false,
+            "mode": "multi",
+            "sort": "none"
+          },
+          "xField": "type",
+          "xTickLabelRotation": 0,
+          "xTickLabelSpacing": 0
+        },
+        "pluginVersion": "12.1.1",
+        "targets": [
+          {
+            "csvContent": "Tipo,Valor\nReal,4.3\nPlan,2.4\nReal AA,2",
+            "datasource": {
+              "type": "grafana-testdata-datasource",
+              "uid": "bf4278l56vabkf"
+            },
+            "dropPercent": 0,
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "WITH vars AS (\n  SELECT\n    '$carrier_type' AS carrierType,\n    to_timestamp($__from / 1000)::date AS date_from,\n    to_timestamp($__to   / 1000)::date AS date_to\n),\nparsed AS (\n  SELECT\n    to_timestamp((o.recvtimets)::bigint / 1000) AS recvtimets,\n    o.dateobserved::date AS dateobserved,\n    c AS carrier\n  FROM gemelluxiot.x002fconsumptionobserved o\n  CROSS JOIN LATERAL jsonb_array_elements(o.carriers::jsonb) AS c\n  CROSS JOIN vars v\n  WHERE c -\u003e\u003e 'carrierType' = v.carrierType\n    AND o.dateobserved::date BETWEEN v.date_from AND v.date_to\n),\nvalues_raw AS (\n  SELECT\n    (carrier -\u003e\u003e 'coverage')::int AS coverage,\n    '(' || (carrier -\u003e\u003e 'unit') || ')' AS unit,\n    recvtimets,\n\n    to_char(recvtimets, 'DD/MM/YYYY') AS formated_date,\n\n    -- valores anuales\n    (carrier -\u003e\u003e 'yearPlan')::numeric           AS plan_year,\n    (carrier -\u003e\u003e 'yearReal')::numeric           AS real_year,\n    (carrier -\u003e\u003e 'yearRealLastYear')::numeric   AS real_aa_year,\n\n    -- valores mensuales\n    (carrier -\u003e\u003e 'monthPlan')::numeric          AS plan_month,\n    (carrier -\u003e\u003e 'monthReal')::numeric          AS real_month,\n    (carrier -\u003e\u003e 'monthRealLastYear')::numeric  AS real_aa_month,\n\n    -- valores diarios\n    (carrier -\u003e\u003e 'dayPlan')::numeric            AS plan_day,\n    (carrier -\u003e\u003e 'dayReal')::numeric            AS real_day,\n    (carrier -\u003e\u003e 'dayRealLastYear')::numeric    AS real_aa_day\n  FROM parsed\n  ORDER BY recvtimets\n  LIMIT 1\n),\ncalculated_values AS (\n  SELECT\n    *,\n    CASE \n      WHEN real_year \u003e 0 THEN\n        ROUND(((real_aa_year - real_year) / real_year) * 100, 1)\n      ELSE 0\n    END AS percent_aa_year,\n    CASE \n      WHEN real_year \u003e 0 THEN\n        ROUND(((plan_year - real_year) / real_year) * 100, 1)\n      ELSE 0\n    END AS percent_plan_year,\n    \n    CASE \n      WHEN real_month \u003e 0 THEN\n        ROUND(((real_aa_month - real_month) / real_month) * 100, 1)\n      ELSE 0\n    END AS percent_aa_month,\n    CASE \n      WHEN real_month \u003e 0 THEN\n        ROUND(((plan_month - real_month) / real_month) * 100, 1)\n      ELSE 0\n    END AS percent_plan_month,\n    \n    -- Cálculos porcentuales para valores diarios\n    CASE \n      WHEN real_day \u003e 0 THEN\n        ROUND(((real_aa_day - real_day) / real_day) * 100, 1)\n      ELSE 0\n    END AS percent_aa_day,\n    CASE \n      WHEN real_day \u003e 0 THEN\n        ROUND(((plan_day - real_day) / real_day) * 100, 1)\n      ELSE 0\n    END AS percent_plan_day\n  FROM values_raw\n)\nSELECT\n  'Anual ' AS categoria,\n  CASE \n    WHEN percent_aa_year \u003e 0 THEN '+' || percent_aa_year::text || '% ▲'\n    WHEN percent_aa_year \u003c 0 THEN percent_aa_year::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje AA\",\n  real_aa_year AS \"Real AA\",\n  CASE \n    WHEN percent_plan_year \u003e 0 THEN '+' || percent_plan_year::text || '% ▲'\n    WHEN percent_plan_year \u003c 0 THEN percent_plan_year::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje Plan\",\n  plan_year AS \"Plan\",\n  real_year AS \"Real\",\n  formated_date\nFROM calculated_values\n\nUNION ALL\nSELECT\n  'Mensual ' AS categoria,\n  CASE \n    WHEN percent_aa_month \u003e 0 THEN '+' || percent_aa_month::text || '% ▲'\n    WHEN percent_aa_month \u003c 0 THEN percent_aa_month::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje AA\",\n  real_aa_month AS \"Real AA\",\n  CASE \n    WHEN percent_plan_month \u003e 0 THEN '+' || percent_plan_month::text || '% ▲'\n    WHEN percent_plan_month \u003c 0 THEN percent_plan_month::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje Plan\",\n  plan_month AS \"Plan\",\n  real_month AS \"Real\",\n  formated_date\nFROM calculated_values\n\nUNION ALL\nSELECT\n  'Diario ' AS categoria,\n  CASE \n    WHEN percent_aa_day \u003e 0 THEN '+' || percent_aa_day::text || '% ▲'\n    WHEN percent_aa_day \u003c 0 THEN percent_aa_day::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje AA\",\n  real_aa_day AS \"Real AA\",\n  CASE \n    WHEN percent_plan_day \u003e 0 THEN '+' || percent_plan_day::text || '% ▲'\n    WHEN percent_plan_day \u003c 0 THEN percent_plan_day::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje Plan\",\n  plan_day AS \"Plan\",\n  real_day AS \"Real\",\n  formated_date\nFROM calculated_values;",
+            "refId": "A",
+            "scenarioId": "csv_content",
+            "sql": {
+              "columns": [
+                {
+                  "parameters": [],
+                  "type": "function"
+                }
+              ],
+              "groupBy": [
+                {
+                  "property": {
+                    "type": "string"
+                  },
+                  "type": "groupBy"
+                }
+              ],
+              "limit": 50
+            }
+          }
+        ],
+        "title": "Consumo de ${carrier_type:text}",
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "includeByName": {},
+              "indexByName": {
+                "Plan": 2,
+                "Real": 1,
+                "Real AA": 3,
+                "categoria": 0,
+                "formated_date": 4
+              },
+              "renameByName": {
+                "formated_date": "Fecha",
+                "type": " ",
+                "value": "${period:text}"
+              }
+            }
+          }
+        ],
+        "type": "barchart"
+      },
+      {
+        "datasource": {
           "type": "datasource",
           "uid": "-- Dashboard --"
         },
@@ -54,9 +188,9 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 1,
-          "w": 24,
-          "x": 0,
+          "h": 2,
+          "w": 12,
+          "x": 12,
           "y": 0
         },
         "id": 8,
@@ -234,134 +368,6 @@
       },
       {
         "datasource": {
-          "type": "grafana-postgresql-datasource",
-          "uid": "bf54fcon0u800e"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "fixedColor": "orange",
-              "mode": "palette-classic"
-            },
-            "custom": {
-              "axisBorderShow": false,
-              "axisCenteredZero": false,
-              "axisColorMode": "text",
-              "axisLabel": "",
-              "axisPlacement": "auto",
-              "fillOpacity": 48,
-              "gradientMode": "none",
-              "hideFrom": {
-                "legend": false,
-                "tooltip": false,
-                "viz": false
-              },
-              "lineWidth": 0,
-              "scaleDistribution": {
-                "type": "linear"
-              },
-              "thresholdsStyle": {
-                "mode": "off"
-              }
-            },
-            "mappings": [],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": 0
-                }
-              ]
-            },
-            "unit": "none"
-          },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 11,
-          "w": 12,
-          "x": 0,
-          "y": 1
-        },
-        "id": 2,
-        "options": {
-          "barRadius": 0.05,
-          "barWidth": 0.95,
-          "colorByField": "Anual",
-          "fullHighlight": true,
-          "groupWidth": 0.71,
-          "legend": {
-            "calcs": [],
-            "displayMode": "list",
-            "placement": "bottom",
-            "showLegend": true
-          },
-          "orientation": "horizontal",
-          "showValue": "always",
-          "stacking": "none",
-          "tooltip": {
-            "hideZeros": false,
-            "mode": "single",
-            "sort": "none"
-          },
-          "xField": "type",
-          "xTickLabelRotation": 0,
-          "xTickLabelSpacing": 0
-        },
-        "pluginVersion": "12.1.1",
-        "targets": [
-          {
-            "csvContent": "Tipo,Valor\nReal,4.3\nPlan,2.4\nReal AA,2",
-            "datasource": {
-              "type": "grafana-testdata-datasource",
-              "uid": "bf4278l56vabkf"
-            },
-            "dropPercent": 0,
-            "editorMode": "code",
-            "format": "table",
-            "rawQuery": true,
-            "rawSql": "WITH vars AS (\n  SELECT\n    '$carrier_type' AS carrierType,\n    to_timestamp($__from / 1000)::date AS date_from,\n    to_timestamp($__to   / 1000)::date AS date_to\n),\nparsed AS (\n  SELECT\n    to_timestamp((o.recvtimets)::bigint / 1000) AS recvtimets,\n    o.dateobserved::date AS dateobserved,\n    c AS carrier\n  FROM gemelluxiot.x002fconsumptionobserved o\n  CROSS JOIN LATERAL jsonb_array_elements(o.carriers::jsonb) AS c\n  CROSS JOIN vars v\n  WHERE c -\u003e\u003e 'carrierType' = v.carrierType\n    AND o.dateobserved::date BETWEEN v.date_from AND v.date_to\n),\nvalues_raw AS (\n  SELECT\n    (carrier -\u003e\u003e 'coverage')::int AS coverage,\n    '(' || (carrier -\u003e\u003e 'unit') || ')' AS unit,\n    recvtimets,\n\n    -- formato estándar para todas las categorías\n    to_char(recvtimets, 'DD/MM/YYYY') AS formated_date,\n\n    -- valores anuales\n    (carrier -\u003e\u003e 'yearPlan')::numeric           AS plan_year,\n    (carrier -\u003e\u003e 'yearReal')::numeric           AS real_year,\n    (carrier -\u003e\u003e 'yearRealLastYear')::numeric   AS real_aa_year,\n\n    -- valores mensuales\n    (carrier -\u003e\u003e 'monthPlan')::numeric          AS plan_month,\n    (carrier -\u003e\u003e 'monthReal')::numeric          AS real_month,\n    (carrier -\u003e\u003e 'monthRealLastYear')::numeric  AS real_aa_month,\n\n    -- valores diarios\n    (carrier -\u003e\u003e 'dayPlan')::numeric            AS plan_day,\n    (carrier -\u003e\u003e 'dayReal')::numeric            AS real_day,\n    (carrier -\u003e\u003e 'dayRealLastYear')::numeric    AS real_aa_day\n  FROM parsed\n  ORDER BY recvtimets\n  LIMIT 1\n)\nSELECT\n  'Anual ' || unit AS categoria,\n  real_aa_year AS \"Real AA\",\n  plan_year    AS \"Plan\",\n  real_year    AS \"Real\",\n  formated_date\nFROM values_raw\n\nUNION ALL\nSELECT\n  'Mensual ' || unit AS categoria,\n  real_aa_month AS \"Real AA\",\n  plan_month    AS \"Plan\",\n  real_month    AS \"Real\",\n  formated_date\nFROM values_raw\n\nUNION ALL\nSELECT\n  'Diario ' || unit AS categoria,\n  real_aa_day AS \"Real AA\",\n  plan_day    AS \"Plan\",\n  real_day    AS \"Real\",\n  formated_date\nFROM values_raw;\n",
-            "refId": "A",
-            "scenarioId": "csv_content",
-            "sql": {
-              "columns": [
-                {
-                  "parameters": [],
-                  "type": "function"
-                }
-              ],
-              "groupBy": [
-                {
-                  "property": {
-                    "type": "string"
-                  },
-                  "type": "groupBy"
-                }
-              ],
-              "limit": 50
-            }
-          }
-        ],
-        "title": "Consumo de ${carrier_type:text}",
-        "transformations": [
-          {
-            "id": "organize",
-            "options": {
-              "excludeByName": {},
-              "includeByName": {},
-              "indexByName": {},
-              "renameByName": {
-                "type": " ",
-                "value": "${period:text}"
-              }
-            }
-          }
-        ],
-        "type": "barchart"
-      },
-      {
-        "datasource": {
           "type": "datasource",
           "uid": "-- Dashboard --"
         },
@@ -384,10 +390,6 @@
                 {
                   "color": "green",
                   "value": 0
-                },
-                {
-                  "color": "red",
-                  "value": 80
                 }
               ]
             }
@@ -395,25 +397,73 @@
           "overrides": [
             {
               "matcher": {
-                "id": "byName",
-                "options": "Real AA"
+                "id": "byRegexp",
+                "options": "/^ $/"
               },
               "properties": [
                 {
-                  "id": "custom.width",
-                  "value": 114
+                  "id": "custom.cellOptions",
+                  "value": {
+                    "type": "color-text"
+                  }
+                },
+                {
+                  "id": "custom.align",
+                  "value": "right"
+                },
+                {
+                  "id": "unit",
+                  "value": "string"
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "options": {
+                        "0": {
+                          "color": "text",
+                          "index": 0
+                        }
+                      },
+                      "type": "value"
+                    },
+                    {
+                      "options": {
+                        "from": 0,
+                        "result": {
+                          "color": "semi-dark-green",
+                          "index": 1
+                        }
+                      },
+                      "type": "range"
+                    },
+                    {
+                      "options": {
+                        "result": {
+                          "color": "red",
+                          "index": 2
+                        },
+                        "to": 0
+                      },
+                      "type": "range"
+                    }
+                  ]
                 }
               ]
             },
             {
               "matcher": {
-                "id": "byName",
-                "options": "Plan"
+                "id": "byRegexp",
+                "options": "/^(Plan|Real AA)$/"
               },
               "properties": [
                 {
                   "id": "custom.width",
-                  "value": 98
+                  "value": 100
+                },
+                {
+                  "id": "custom.align",
+                  "value": "left"
                 }
               ]
             },
@@ -425,28 +475,52 @@
               "properties": [
                 {
                   "id": "custom.width",
-                  "value": 75
+                  "value": 93
                 }
               ]
             },
             {
               "matcher": {
                 "id": "byName",
-                "options": "categoria"
+                "options": " "
               },
               "properties": [
                 {
-                  "id": "custom.width"
+                  "id": "custom.width",
+                  "value": 100
                 }
               ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Real"
+              },
+              "properties": [
+                {
+                  "id": "custom.width",
+                  "value": 77
+                },
+                {
+                  "id": "custom.align",
+                  "value": "left"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": ""
+              },
+              "properties": []
             }
           ]
         },
         "gridPos": {
-          "h": 5,
+          "h": 9,
           "w": 12,
           "x": 12,
-          "y": 1
+          "y": 2
         },
         "id": 3,
         "options": {
@@ -484,14 +558,51 @@
                 "recvtimets": true
               },
               "includeByName": {},
-              "indexByName": {},
+              "indexByName": {
+                "Plan": 3,
+                "Porcentaje AA": 4,
+                "Porcentaje Plan": 2,
+                "Real": 0,
+                "Real AA": 5,
+                "categoria": 1,
+                "formated_date": 6
+              },
               "renameByName": {
+                "Plan": "",
+                "Porcentaje AA": " ",
+                "Porcentaje Plan": " ",
                 "categoria": "Categoría"
               }
             }
           }
         ],
         "type": "table"
+      },
+      {
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 2,
+          "w": 15,
+          "x": 9,
+          "y": 11
+        },
+        "id": 9,
+        "options": {
+          "code": {
+            "language": "plaintext",
+            "showLineNumbers": false,
+            "showMiniMap": false
+          },
+          "content": "\u003ca style=\"font-size:0.7rem; display:flex; justify-content:end; align-items:center\" href=\"https://gemellux.com/\"\u003e\n  \u003cimg width=\"25\" src=\"https://gemellux.com/wp-content/uploads/2024/05/03-Vertical-sin-Generico-ni-nombre-solo-Logo-2-tintas-agrandado.png\"\u003e\n  \u003cp style=\"padding-left:0.3rem\"\u003eDesarrollado por Gemellux\u003c/p\u003e\n\u003c/a\u003e",
+          "mode": "html"
+        },
+        "pluginVersion": "12.1.1",
+        "title": "",
+        "transparent": true,
+        "type": "text"
       }
     ],
     "preload": false,
