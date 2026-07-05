@@ -1,8 +1,8 @@
 {
-  "apiVersion": "dashboard.grafana.app/v1beta1",
+  "apiVersion": "dashboard.grafana.app/v0alpha1",
   "kind": "Dashboard",
   "metadata": {
-    "name": "073f7eb4-d000-4211-baaa-157ca529a0bb"
+    "name": "209f86f8-3d12-48de-93eb-32caa3b3e1ed"
   },
   "spec": {
     "annotations": {
@@ -26,194 +26,6 @@
     "graphTooltip": 0,
     "links": [],
     "panels": [
-      {
-        "datasource": {
-          "type": "grafana-postgresql-datasource",
-          "uid": "bf54fcon0u800e"
-        },
-        "description": "Este grafico muestra el estado de cobertura de ${carrier_type:text}.\n\n- Verde: Suficiente\n- Rojo: Crítico",
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "mappings": [
-              {
-                "options": {
-                  "from": 0,
-                  "result": {
-                    "index": 0,
-                    "text": "Estado Crítico"
-                  },
-                  "to": 20
-                },
-                "type": "range"
-              },
-              {
-                "options": {
-                  "from": 20,
-                  "result": {
-                    "index": 1,
-                    "text": "Estado Grave"
-                  },
-                  "to": 40
-                },
-                "type": "range"
-              },
-              {
-                "options": {
-                  "from": 40,
-                  "result": {
-                    "index": 2,
-                    "text": "Estado Regular"
-                  },
-                  "to": 60
-                },
-                "type": "range"
-              },
-              {
-                "options": {
-                  "from": 60,
-                  "result": {
-                    "index": 3,
-                    "text": "Estado Aceptable"
-                  },
-                  "to": 80
-                },
-                "type": "range"
-              },
-              {
-                "options": {
-                  "from": 80,
-                  "result": {
-                    "index": 4,
-                    "text": "Estado Suficiente"
-                  },
-                  "to": 100
-                },
-                "type": "range"
-              }
-            ],
-            "thresholds": {
-              "mode": "percentage",
-              "steps": [
-                {
-                  "color": "dark-red",
-                  "value": 0
-                },
-                {
-                  "color": "dark-orange",
-                  "value": 20
-                },
-                {
-                  "color": "#EAB839",
-                  "value": 40
-                },
-                {
-                  "color": "green",
-                  "value": 60
-                },
-                {
-                  "color": "#19730E",
-                  "value": 80
-                }
-              ]
-            },
-            "unit": "percent"
-          },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 9,
-          "w": 8,
-          "x": 4,
-          "y": 0
-        },
-        "id": 1,
-        "options": {
-          "minVizHeight": 75,
-          "minVizWidth": 75,
-          "orientation": "auto",
-          "reduceOptions": {
-            "calcs": [
-              "lastNotNull"
-            ],
-            "fields": "/^percent$/",
-            "values": false
-          },
-          "showThresholdLabels": false,
-          "showThresholdMarkers": true,
-          "sizing": "auto"
-        },
-        "pluginVersion": "12.1.1",
-        "targets": [
-          {
-            "datasource": {
-              "type": "grafana-postgresql-datasource",
-              "uid": "bf54fcon0u800e"
-            },
-            "editorMode": "code",
-            "format": "table",
-            "hide": false,
-            "rawQuery": true,
-            "rawSql": "\n    WITH parsed AS (\n        SELECT\n\t\t    -- los datos vienen en milisegundos, asi que se castea a bigint y se lleva a segundos\n            to_timestamp((o.recvtimets)::bigint / 1000) AS recvtimets,\n            o.dateobserved::date AS dateobserved,\n            c AS carrier\n        FROM gemelluxiot.x002fconsumptionobserved o\n        CROSS JOIN LATERAL \n\t\t  -- el json viene de tipo string, asi que se castea\n\t\t  jsonb_array_elements(o.carriers::jsonb) AS c\n        WHERE \n                c -\u003e\u003e 'carrierType' = '$carrier_type' \n            AND dateobserved::date BETWEEN \n                    to_timestamp($__from / 1000)::date\n                AND to_timestamp($__to / 1000)::date\n    )\n    SELECT\n        (carrier -\u003e\u003e 'coverage')::int AS coverage,\n        ((carrier -\u003e\u003e 'coverage')::int * 100.0 / ('$required_coverage')) AS percent,\n        (carrier -\u003e\u003e 'unit') AS unit,\n        recvtimets,\n        dateobserved\n    FROM parsed\n    ORDER BY recvtimets;\n",
-            "refId": "S",
-            "sql": {
-              "columns": [
-                {
-                  "parameters": [
-                    {
-                      "name": "carriers",
-                      "type": "functionParameter"
-                    }
-                  ],
-                  "type": "function"
-                }
-              ],
-              "groupBy": [
-                {
-                  "property": {
-                    "type": "string"
-                  },
-                  "type": "groupBy"
-                }
-              ],
-              "limit": 50,
-              "whereJsonTree": {
-                "children1": [
-                  {
-                    "id": "a898b99a-cdef-4012-b456-719aeef4c3f7",
-                    "properties": {
-                      "field": "entitytype",
-                      "fieldSrc": "field",
-                      "operator": "equal",
-                      "value": [
-                        "$carrier_type"
-                      ],
-                      "valueError": [
-                        null
-                      ],
-                      "valueSrc": [
-                        "value"
-                      ],
-                      "valueType": [
-                        "text"
-                      ]
-                    },
-                    "type": "rule"
-                  }
-                ],
-                "id": "888bbb9a-0123-4456-b89a-b19addbf5587",
-                "type": "group"
-              },
-              "whereString": "entitytype = '$carrier_type'"
-            },
-            "table": "gemelluxiot.x002fconsumptionobserved"
-          }
-        ],
-        "title": "Cobertura de ${carrier_type:text}",
-        "type": "gauge"
-      },
       {
         "datasource": {
           "type": "datasource",
@@ -242,14 +54,14 @@
         },
         "gridPos": {
           "h": 2,
-          "w": 8,
-          "x": 12,
+          "w": 16,
+          "x": 0,
           "y": 0
         },
         "id": 17,
         "options": {
           "infinitePan": false,
-          "inlineEditing": false,
+          "inlineEditing": true,
           "panZoom": false,
           "root": {
             "background": {
@@ -446,15 +258,15 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 5,
+          "h": 4,
           "w": 8,
-          "x": 12,
-          "y": 2
+          "x": 16,
+          "y": 0
         },
         "id": 15,
         "options": {
           "infinitePan": false,
-          "inlineEditing": false,
+          "inlineEditing": true,
           "panZoom": false,
           "root": {
             "background": {
@@ -473,6 +285,40 @@
               "vertical": "top"
             },
             "elements": [
+              {
+                "background": {
+                  "color": {
+                    "fixed": "#D9D9D9"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "align": "center",
+                  "color": {
+                    "fixed": "#000000"
+                  },
+                  "valign": "middle"
+                },
+                "connections": [],
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 5",
+                "placement": {
+                  "height": 14,
+                  "left": 22.5,
+                  "rotation": 0,
+                  "top": -30,
+                  "width": 134
+                },
+                "type": "parallelogram"
+              },
               {
                 "background": {
                   "color": {
@@ -500,16 +346,17 @@
                 },
                 "connections": [],
                 "constraint": {
-                  "horizontal": "scale",
+                  "horizontal": "center",
                   "vertical": "center"
                 },
                 "links": [],
                 "name": "Element 1",
                 "placement": {
                   "height": 50,
-                  "left": 60.71428571428571,
-                  "right": 24.047619047619047,
-                  "top": -3
+                  "left": -59.5,
+                  "rotation": 0,
+                  "top": -11,
+                  "width": 77
                 },
                 "type": "metric-value"
               },
@@ -535,7 +382,6 @@
                   },
                   "valign": "middle"
                 },
-                "connections": [],
                 "constraint": {
                   "horizontal": "center",
                   "vertical": "center"
@@ -544,8 +390,9 @@
                 "name": "Element 2",
                 "placement": {
                   "height": 50,
-                  "left": 30,
-                  "top": -3,
+                  "left": 54.5,
+                  "rotation": 0,
+                  "top": -11,
                   "width": 140
                 },
                 "type": "text"
@@ -580,9 +427,10 @@
                 "name": "Element 3",
                 "placement": {
                   "height": 50,
-                  "left": -130,
-                  "top": -3,
-                  "width": 32
+                  "left": -154,
+                  "rotation": 0,
+                  "top": -10,
+                  "width": 100
                 },
                 "type": "text"
               },
@@ -590,6 +438,11 @@
                 "background": {
                   "color": {
                     "fixed": "transparent"
+                  },
+                  "image": {
+                    "field": "",
+                    "fixed": "",
+                    "mode": "fixed"
                   }
                 },
                 "border": {
@@ -598,14 +451,12 @@
                   }
                 },
                 "config": {
-                  "fill": {
-                    "fixed": "text"
-                  },
-                  "path": {
-                    "fixed": "img/icons/unicons/analytics.svg",
-                    "mode": "fixed"
+                  "rpm": {
+                    "fixed": 40,
+                    "mode": "mod"
                   }
                 },
+                "connections": [],
                 "constraint": {
                   "horizontal": "center",
                   "vertical": "center"
@@ -613,12 +464,13 @@
                 "links": [],
                 "name": "Element 4",
                 "placement": {
-                  "height": 49,
-                  "left": 118,
-                  "top": 1.5,
-                  "width": 36
+                  "height": 86,
+                  "left": -29.5,
+                  "rotation": 0,
+                  "top": 17,
+                  "width": 60
                 },
-                "type": "icon"
+                "type": "windTurbine"
               }
             ],
             "name": "Element 1764704150401",
@@ -676,6 +528,194 @@
       },
       {
         "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "dfr7c52qcykg0b"
+        },
+        "description": "Este grafico muestra el estado de cobertura de ${carrier_type}.\n\n- Verde: Suficiente\n- Rojo: Crítico",
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [
+              {
+                "options": {
+                  "from": 0,
+                  "result": {
+                    "index": 0,
+                    "text": "Estado Crítico"
+                  },
+                  "to": 20
+                },
+                "type": "range"
+              },
+              {
+                "options": {
+                  "from": 20,
+                  "result": {
+                    "index": 1,
+                    "text": "Estado Grave"
+                  },
+                  "to": 40
+                },
+                "type": "range"
+              },
+              {
+                "options": {
+                  "from": 40,
+                  "result": {
+                    "index": 2,
+                    "text": "Estado Regular"
+                  },
+                  "to": 60
+                },
+                "type": "range"
+              },
+              {
+                "options": {
+                  "from": 60,
+                  "result": {
+                    "index": 3,
+                    "text": "Estado Aceptable"
+                  },
+                  "to": 80
+                },
+                "type": "range"
+              },
+              {
+                "options": {
+                  "from": 80,
+                  "result": {
+                    "index": 4,
+                    "text": "Estado Suficiente"
+                  },
+                  "to": 100
+                },
+                "type": "range"
+              }
+            ],
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {
+                  "color": "dark-red",
+                  "value": 0
+                },
+                {
+                  "color": "dark-orange",
+                  "value": 20
+                },
+                {
+                  "color": "#EAB839",
+                  "value": 40
+                },
+                {
+                  "color": "green",
+                  "value": 60
+                },
+                {
+                  "color": "#19730E",
+                  "value": 80
+                }
+              ]
+            },
+            "unit": "percent"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 16,
+          "x": 0,
+          "y": 2
+        },
+        "id": 1,
+        "options": {
+          "minVizHeight": 75,
+          "minVizWidth": 75,
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "/^percent$/",
+            "values": false
+          },
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true,
+          "sizing": "auto"
+        },
+        "pluginVersion": "12.1.1",
+        "targets": [
+          {
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "dfr7c52qcykg0b"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "hide": false,
+            "rawQuery": true,
+            "rawSql": "\n    WITH parsed AS (\n        SELECT\n\t\t    -- los datos vienen en milisegundos, asi que se castea a bigint y se lleva a segundos\n            to_timestamp((o.recvtimets)::bigint / 1000) AS recvtimets,\n            o.dateobserved::date AS dateobserved,\n            c AS carrier\n        FROM gemelluxiot.x002fconsumptionobserved o\n        CROSS JOIN LATERAL \n\t\t  -- el json viene de tipo string, asi que se castea\n\t\t  jsonb_array_elements(o.carriers::jsonb) AS c\n        WHERE \n                c -\u003e\u003e 'carrierType' = '$carrier_type' \n            AND dateobserved::date BETWEEN \n                    to_timestamp($__from / 1000)::date\n                AND to_timestamp($__to / 1000)::date\n    )\n    SELECT\n        (carrier -\u003e\u003e 'coverage')::int AS coverage,\n        ((carrier -\u003e\u003e 'coverage')::int * 100.0 / ('$required_coverage')) AS percent,\n        recvtimets,\n        dateobserved\n    FROM parsed\n    ORDER BY recvtimets;\n",
+            "refId": "S",
+            "sql": {
+              "columns": [
+                {
+                  "parameters": [
+                    {
+                      "name": "carriers",
+                      "type": "functionParameter"
+                    }
+                  ],
+                  "type": "function"
+                }
+              ],
+              "groupBy": [
+                {
+                  "property": {
+                    "type": "string"
+                  },
+                  "type": "groupBy"
+                }
+              ],
+              "limit": 50,
+              "whereJsonTree": {
+                "children1": [
+                  {
+                    "id": "a898b99a-cdef-4012-b456-719aeef4c3f7",
+                    "properties": {
+                      "field": "entitytype",
+                      "fieldSrc": "field",
+                      "operator": "equal",
+                      "value": [
+                        "$carrier_type"
+                      ],
+                      "valueError": [
+                        null
+                      ],
+                      "valueSrc": [
+                        "value"
+                      ],
+                      "valueType": [
+                        "text"
+                      ]
+                    },
+                    "type": "rule"
+                  }
+                ],
+                "id": "888bbb9a-0123-4456-b89a-b19addbf5587",
+                "type": "group"
+              },
+              "whereString": "entitytype = '$carrier_type'"
+            },
+            "table": "gemelluxiot.x002fconsumptionobserved"
+          }
+        ],
+        "title": "Cobertura de ${carrier_type}",
+        "type": "gauge"
+      },
+      {
+        "datasource": {
           "type": "datasource",
           "uid": "-- Dashboard --"
         },
@@ -701,10 +741,10 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 1,
+          "h": 2,
           "w": 8,
-          "x": 12,
-          "y": 7
+          "x": 16,
+          "y": 4
         },
         "id": 13,
         "options": {
@@ -762,10 +802,10 @@
                 "name": "Element 1",
                 "placement": {
                   "height": 50,
-                  "left": -39,
+                  "left": -59.5,
                   "rotation": 0,
-                  "top": 0,
-                  "width": 81
+                  "top": -1,
+                  "width": 64
                 },
                 "type": "metric-value"
               },
@@ -800,10 +840,47 @@
                 "name": "Element 2",
                 "placement": {
                   "height": 50,
-                  "left": 68.49166870117188,
+                  "left": 68,
                   "rotation": 0,
-                  "top": 0,
-                  "width": 88.01666259765625
+                  "top": -1,
+                  "width": 88
+                },
+                "type": "text"
+              },
+              {
+                "background": {
+                  "color": {
+                    "fixed": "transparent"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "align": "left",
+                  "color": {
+                    "fixed": "text"
+                  },
+                  "size": 20,
+                  "text": {
+                    "fixed": " litros"
+                  },
+                  "valign": "middle"
+                },
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 3",
+                "placement": {
+                  "height": 50,
+                  "left": -151.5,
+                  "rotation": 0,
+                  "top": -2,
+                  "width": 100
                 },
                 "type": "text"
               },
@@ -823,7 +900,7 @@
                     "fixed": "text"
                   },
                   "path": {
-                    "fixed": "img/icons/unicons/angle-double-left.svg",
+                    "fixed": "img/icons/unicons/bag-alt.svg",
                     "mode": "fixed"
                   }
                 },
@@ -836,52 +913,11 @@
                 "name": "Element 4",
                 "placement": {
                   "height": 38,
-                  "left": 130.5,
-                  "rotation": 0,
-                  "top": 0,
+                  "left": -1,
+                  "top": 2,
                   "width": 54
                 },
                 "type": "icon"
-              },
-              {
-                "background": {
-                  "color": {
-                    "field": "unit",
-                    "fixed": "#D9D9D9"
-                  }
-                },
-                "border": {
-                  "color": {
-                    "fixed": "dark-green"
-                  }
-                },
-                "config": {
-                  "align": "left",
-                  "color": {
-                    "fixed": "text"
-                  },
-                  "size": 20,
-                  "text": {
-                    "field": "unit",
-                    "fixed": "",
-                    "mode": "field"
-                  },
-                  "valign": "middle"
-                },
-                "constraint": {
-                  "horizontal": "center",
-                  "vertical": "center"
-                },
-                "links": [],
-                "name": "Element 5",
-                "placement": {
-                  "height": 50,
-                  "left": -123.5,
-                  "rotation": 0,
-                  "top": 0,
-                  "width": 64
-                },
-                "type": "metric-value"
               }
             ],
             "name": "Element 1764704150401",
@@ -908,6 +944,29 @@
           }
         ],
         "title": "",
+        "transformations": [
+          {
+            "id": "calculateField",
+            "options": {
+              "binary": {
+                "left": {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "$required_coverage"
+                  }
+                },
+                "operator": "-",
+                "right": {
+                  "fixed": ""
+                }
+              },
+              "mode": "binary",
+              "reduce": {
+                "reducer": "sum"
+              }
+            }
+          }
+        ],
         "type": "canvas"
       },
       {
@@ -937,12 +996,12 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 1,
+          "h": 2,
           "w": 8,
-          "x": 12,
-          "y": 8
+          "x": 16,
+          "y": 6
         },
-        "id": 19,
+        "id": 14,
         "options": {
           "infinitePan": false,
           "inlineEditing": true,
@@ -964,6 +1023,82 @@
               "vertical": "top"
             },
             "elements": [
+              {
+                "background": {
+                  "color": {
+                    "fixed": "transparent"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "align": "center",
+                  "color": {
+                    "fixed": "text"
+                  },
+                  "size": 20,
+                  "text": {
+                    "fixed": "Consumido"
+                  },
+                  "valign": "middle"
+                },
+                "connections": [],
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 2",
+                "placement": {
+                  "height": 50,
+                  "left": 78,
+                  "rotation": 0,
+                  "top": -1,
+                  "width": 108
+                },
+                "type": "text"
+              },
+              {
+                "background": {
+                  "color": {
+                    "fixed": "transparent"
+                  }
+                },
+                "border": {
+                  "color": {
+                    "fixed": "dark-green"
+                  }
+                },
+                "config": {
+                  "align": "left",
+                  "color": {
+                    "fixed": "text"
+                  },
+                  "size": 20,
+                  "text": {
+                    "fixed": " litros"
+                  },
+                  "valign": "middle"
+                },
+                "connections": [],
+                "constraint": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "links": [],
+                "name": "Element 3",
+                "placement": {
+                  "height": 50,
+                  "left": -151.5,
+                  "rotation": 0,
+                  "top": -1,
+                  "width": 100
+                },
+                "type": "text"
+              },
               {
                 "background": {
                   "color": {
@@ -998,50 +1133,12 @@
                 "name": "Element 1",
                 "placement": {
                   "height": 50,
-                  "left": -39,
+                  "left": -59.5,
                   "rotation": 0,
                   "top": 0,
-                  "width": 81
+                  "width": 64
                 },
                 "type": "metric-value"
-              },
-              {
-                "background": {
-                  "color": {
-                    "fixed": "transparent"
-                  }
-                },
-                "border": {
-                  "color": {
-                    "fixed": "dark-green"
-                  }
-                },
-                "config": {
-                  "align": "center",
-                  "color": {
-                    "fixed": "text"
-                  },
-                  "size": 20,
-                  "text": {
-                    "fixed": "Consumido"
-                  },
-                  "valign": "middle"
-                },
-                "connections": [],
-                "constraint": {
-                  "horizontal": "center",
-                  "vertical": "center"
-                },
-                "links": [],
-                "name": "Element 2",
-                "placement": {
-                  "height": 50,
-                  "left": 68.49166870117188,
-                  "rotation": 0,
-                  "top": 0,
-                  "width": 88.01666259765625
-                },
-                "type": "text"
               },
               {
                 "background": {
@@ -1059,11 +1156,10 @@
                     "fixed": "text"
                   },
                   "path": {
-                    "fixed": "img/icons/unicons/angle-double-right.svg",
+                    "fixed": "img/icons/unicons/analytics.svg",
                     "mode": "fixed"
                   }
                 },
-                "connections": [],
                 "constraint": {
                   "horizontal": "center",
                   "vertical": "center"
@@ -1071,53 +1167,12 @@
                 "links": [],
                 "name": "Element 4",
                 "placement": {
-                  "height": 38,
-                  "left": 130.5,
-                  "rotation": 0,
-                  "top": 0,
-                  "width": 54
+                  "height": 39,
+                  "left": -5,
+                  "top": 3.5,
+                  "width": 46
                 },
                 "type": "icon"
-              },
-              {
-                "background": {
-                  "color": {
-                    "field": "unit",
-                    "fixed": "#D9D9D9"
-                  }
-                },
-                "border": {
-                  "color": {
-                    "fixed": "dark-green"
-                  }
-                },
-                "config": {
-                  "align": "left",
-                  "color": {
-                    "fixed": "text"
-                  },
-                  "size": 20,
-                  "text": {
-                    "field": "unit",
-                    "fixed": "",
-                    "mode": "field"
-                  },
-                  "valign": "middle"
-                },
-                "constraint": {
-                  "horizontal": "center",
-                  "vertical": "center"
-                },
-                "links": [],
-                "name": "Element 5",
-                "placement": {
-                  "height": 50,
-                  "left": -123.5,
-                  "rotation": 0,
-                  "top": 0,
-                  "width": 64
-                },
-                "type": "metric-value"
               }
             ],
             "name": "Element 1764704150401",
@@ -1172,32 +1227,6 @@
           }
         ],
         "type": "canvas"
-      },
-      {
-        "fieldConfig": {
-          "defaults": {},
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 2,
-          "w": 15,
-          "x": 9,
-          "y": 9
-        },
-        "id": 20,
-        "options": {
-          "code": {
-            "language": "plaintext",
-            "showLineNumbers": false,
-            "showMiniMap": false
-          },
-          "content": "\u003ca style=\"font-size:0.7rem; display:flex; justify-content:end; align-items:center\" href=\"https://gemellux.com/\"\u003e\n  \u003cimg width=\"25\" src=\"https://gemellux.com/wp-content/uploads/2024/05/03-Vertical-sin-Generico-ni-nombre-solo-Logo-2-tintas-agrandado.png\"\u003e\n  \u003cp style=\"padding-left:0.3rem\"\u003eDesarrollado por Gemellux\u003c/p\u003e\n\u003c/a\u003e",
-          "mode": "html"
-        },
-        "pluginVersion": "12.1.1",
-        "title": "",
-        "transparent": true,
-        "type": "text"
       }
     ],
     "preload": false,
@@ -1207,30 +1236,30 @@
       "list": [
         {
           "current": {
-            "text": "boilerDiesel",
-            "value": "boilerDiesel"
+            "text": "liquefiedPetroleumGas",
+            "value": "liquefiedPetroleumGas"
           },
           "description": "",
           "label": "Tipo de Cobertura",
           "name": "carrier_type",
           "options": [
             {
-              "selected": true,
-              "text": "Diesel",
-              "value": "boilerDiesel"
-            },
-            {
               "selected": false,
               "text": "Agua",
               "value": "water"
             },
             {
-              "selected": false,
+              "selected": true,
               "text": "Gas",
               "value": "liquefiedPetroleumGas"
+            },
+            {
+              "selected": false,
+              "text": "Diesel",
+              "value": "boilerDiesel"
             }
           ],
-          "query": "Diesel : boilerDiesel, Agua : water, Gas : liquefiedPetroleumGas",
+          "query": "Agua : water,Gas : liquefiedPetroleumGas,Diesel : boilerDiesel",
           "type": "custom"
         },
         {
@@ -1252,6 +1281,6 @@
     },
     "timepicker": {},
     "timezone": "America/Havana",
-    "title": "Dashboard de Cobertura"
+    "title": "Hotel Cobertura With Eolic design"
   }
 }

@@ -29,7 +29,7 @@
       {
         "datasource": {
           "type": "grafana-postgresql-datasource",
-          "uid": "bf54fcon0u800e"
+          "uid": "dfr7c52qcykg0b"
         },
         "fieldConfig": {
           "defaults": {
