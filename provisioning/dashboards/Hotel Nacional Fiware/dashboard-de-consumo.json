@@ -85,10 +85,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
-      },
+      "datasource": "grafana-postgresql-datasource",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -195,10 +192,7 @@
       "targets": [
         {
           "csvContent": "Tipo,Valor\nReal,4.3\nPlan,2.4\nReal AA,2",
-          "datasource": {
-            "type": "grafana-testdata-datasource",
-            "uid": "${DS_GRAFANA-TESTDATA-DATASOURCE}"
-          },
+          "datasource": "grafana-testdata-datasource",
           "dropPercent": 0,
           "editorMode": "code",
           "format": "table",

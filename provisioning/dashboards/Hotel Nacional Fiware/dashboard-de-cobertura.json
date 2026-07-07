@@ -72,10 +72,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
-      },
+      "datasource": "grafana-postgresql-datasource",
       "description": "Este grafico muestra el estado de cobertura de ${carrier_type:text}.\n\n- Verde: Suficiente\n- Rojo: Crítico",
       "fieldConfig": {
         "defaults": {
@@ -191,10 +188,7 @@
       "pluginVersion": "12.1.1",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
-          },
+          "datasource": "grafana-postgresql-datasource",
           "editorMode": "code",
           "format": "table",
           "hide": false,
