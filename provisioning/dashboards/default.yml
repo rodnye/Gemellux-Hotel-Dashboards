@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Gemellux
+    folder: Hotel Nacional Fiware
+    type: file
+    options:
+      path:
+        /etc/grafana/provisioning/dashboards
+        # Default path for Windows: C:/Program Files/GrafanaLabs/grafana/public/dashboards
+        # Default path for Linux is: /etc/grafana/dashboards
