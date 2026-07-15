@@ -192,7 +192,7 @@
       "targets": [
         {
           "csvContent": "Tipo,Valor\nReal,4.3\nPlan,2.4\nReal AA,2",
-          "datasource": "grafana-testdata-datasource",
+          "datasource": "grafana-postgresql-datasource",
           "dropPercent": 0,
           "editorMode": "code",
           "format": "table",
