@@ -1,67 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_GRAFANA-POSTGRESQL-DATASOURCE",
-      "label": "grafana-postgresql-datasource",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "grafana-postgresql-datasource",
-      "pluginName": "PostgreSQL"
-    },
-    {
-      "name": "DS_GRAFANA-TESTDATA-DATASOURCE",
-      "label": "grafana-testdata-datasource",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "grafana-testdata-datasource",
-      "pluginName": "TestData"
-    }
-  ],
-  "__elements": {},
-  "__requires": [
-    {
-      "type": "panel",
-      "id": "barchart",
-      "name": "Bar chart",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "canvas",
-      "name": "Canvas",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "12.1.1"
-    },
-    {
-      "type": "datasource",
-      "id": "grafana-postgresql-datasource",
-      "name": "PostgreSQL",
-      "version": "12.1.1"
-    },
-    {
-      "type": "datasource",
-      "id": "grafana-testdata-datasource",
-      "name": "TestData",
-      "version": "12.1.1"
-    },
-    {
-      "type": "panel",
-      "id": "table",
-      "name": "Table",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "text",
-      "name": "Text",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -82,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
+  "id": 2149460224040960,
   "links": [],
   "panels": [
     {
@@ -167,7 +104,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH vars AS (\n  SELECT\n    '$carrier_type' AS carrierType,\n    to_timestamp($__from / 1000)::date AS date_from,\n    to_timestamp($__to   / 1000)::date AS date_to\n),\nparsed AS (\n  SELECT\n    to_timestamp((o.recvtimets)::bigint / 1000) AS recvtimets,\n    o.dateobserved::date AS dateobserved,\n    c AS carrier\n  FROM gemelluxiot.x002fconsumptionobserved o\n  CROSS JOIN LATERAL jsonb_array_elements(o.carriers::jsonb) AS c\n  CROSS JOIN vars v\n  WHERE c ->> 'carrierType' = v.carrierType\n    AND o.dateobserved::date BETWEEN v.date_from AND v.date_to\n),\nvalues_raw AS (\n  SELECT\n    (carrier ->> 'coverage')::int AS coverage,\n    '(' || (carrier ->> 'unit') || ')' AS unit,\n    recvtimets,\n\n    to_char(recvtimets, 'DD/MM/YYYY') AS formated_date,\n\n    -- valores anuales\n    (carrier ->> 'yearPlan')::numeric           AS plan_year,\n    (carrier ->> 'yearReal')::numeric           AS real_year,\n    (carrier ->> 'yearRealLastYear')::numeric   AS real_aa_year,\n\n    -- valores mensuales\n    (carrier ->> 'monthPlan')::numeric          AS plan_month,\n    (carrier ->> 'monthReal')::numeric          AS real_month,\n    (carrier ->> 'monthRealLastYear')::numeric  AS real_aa_month,\n\n    -- valores diarios\n    (carrier ->> 'dayPlan')::numeric            AS plan_day,\n    (carrier ->> 'dayReal')::numeric            AS real_day,\n    (carrier ->> 'dayRealLastYear')::numeric    AS real_aa_day\n  FROM parsed\n  ORDER BY recvtimets\n  LIMIT 1\n),\ncalculated_values AS (\n  SELECT\n    *,\n    CASE \n      WHEN real_year > 0 THEN\n        ROUND(((real_aa_year - real_year) / real_year) * 100, 1)\n      ELSE 0\n    END AS percent_aa_year,\n    CASE \n      WHEN real_year > 0 THEN\n        ROUND(((plan_year - real_year) / real_year) * 100, 1)\n      ELSE 0\n    END AS percent_plan_year,\n    \n    CASE \n      WHEN real_month > 0 THEN\n        ROUND(((real_aa_month - real_month) / real_month) * 100, 1)\n      ELSE 0\n    END AS percent_aa_month,\n    CASE \n      WHEN real_month > 0 THEN\n        ROUND(((plan_month - real_month) / real_month) * 100, 1)\n      ELSE 0\n    END AS percent_plan_month,\n    \n    -- Cálculos porcentuales para valores diarios\n    CASE \n      WHEN real_day > 0 THEN\n        ROUND(((real_aa_day - real_day) / real_day) * 100, 1)\n      ELSE 0\n    END AS percent_aa_day,\n    CASE \n      WHEN real_day > 0 THEN\n        ROUND(((plan_day - real_day) / real_day) * 100, 1)\n      ELSE 0\n    END AS percent_plan_day\n  FROM values_raw\n)\nSELECT\n  'Anual ' AS categoria,\n  CASE \n    WHEN percent_aa_year > 0 THEN '+' || percent_aa_year::text || '% ▲'\n    WHEN percent_aa_year < 0 THEN percent_aa_year::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje AA\",\n  real_aa_year AS \"Real AA\",\n  CASE \n    WHEN percent_plan_year > 0 THEN '+' || percent_plan_year::text || '% ▲'\n    WHEN percent_plan_year < 0 THEN percent_plan_year::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje Plan\",\n  plan_year AS \"Plan\",\n  real_year AS \"Real\",\n  formated_date\nFROM calculated_values\n\nUNION ALL\nSELECT\n  'Mensual ' AS categoria,\n  CASE \n    WHEN percent_aa_month > 0 THEN '+' || percent_aa_month::text || '% ▲'\n    WHEN percent_aa_month < 0 THEN percent_aa_month::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje AA\",\n  real_aa_month AS \"Real AA\",\n  CASE \n    WHEN percent_plan_month > 0 THEN '+' || percent_plan_month::text || '% ▲'\n    WHEN percent_plan_month < 0 THEN percent_plan_month::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje Plan\",\n  plan_month AS \"Plan\",\n  real_month AS \"Real\",\n  formated_date\nFROM calculated_values\n\nUNION ALL\nSELECT\n  'Diario ' AS categoria,\n  CASE \n    WHEN percent_aa_day > 0 THEN '+' || percent_aa_day::text || '% ▲'\n    WHEN percent_aa_day < 0 THEN percent_aa_day::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje AA\",\n  real_aa_day AS \"Real AA\",\n  CASE \n    WHEN percent_plan_day > 0 THEN '+' || percent_plan_day::text || '% ▲'\n    WHEN percent_plan_day < 0 THEN percent_plan_day::text || '% ▼'\n    ELSE '0.0%'\n  END AS \"Porcentaje Plan\",\n  plan_day AS \"Plan\",\n  real_day AS \"Real\",\n  formated_date\nFROM calculated_values;",
+          "rawSql": "WITH latest_data AS (\n    SELECT\n        unit,\n        year_plan, year_real, year_real_last_year,\n        month_plan, month_real, month_real_last_year,\n        day_plan, day_real, day_real_last_year,\n        date_observed\n    FROM consumption_data\n    WHERE carrier_type = '$carrier_type'\n      AND date_observed BETWEEN to_timestamp($__from / 1000)::date \n                            AND to_timestamp($__to / 1000)::date\n    ORDER BY date_observed DESC\n    LIMIT 1\n),\ncalculated_values AS (\n    SELECT\n        unit,\n        to_char(date_observed, 'DD/MM/YYYY') AS formated_date,\n        \n        -- Anual\n        year_plan AS plan_year, \n        year_real AS real_year, \n        year_real_last_year AS real_aa_year,\n        CASE WHEN year_real > 0 THEN ROUND(((year_real_last_year - year_real)::numeric / year_real) * 100, 1) ELSE 0 END AS percent_aa_year,\n        CASE WHEN year_real > 0 THEN ROUND(((year_plan - year_real)::numeric / year_real) * 100, 1) ELSE 0 END AS percent_plan_year,\n        \n        -- Mensual\n        month_plan AS plan_month, \n        month_real AS real_month, \n        month_real_last_year AS real_aa_month,\n        CASE WHEN month_real > 0 THEN ROUND(((month_real_last_year - month_real)::numeric / month_real) * 100, 1) ELSE 0 END AS percent_aa_month,\n        CASE WHEN month_real > 0 THEN ROUND(((month_plan - month_real)::numeric / month_real) * 100, 1) ELSE 0 END AS percent_plan_month,\n        \n        -- Diario\n        day_plan AS plan_day, \n        day_real AS real_day, \n        day_real_last_year AS real_aa_day,\n        CASE WHEN day_real > 0 THEN ROUND(((day_real_last_year - day_real)::numeric / day_real) * 100, 1) ELSE 0 END AS percent_aa_day,\n        CASE WHEN day_real > 0 THEN ROUND(((day_plan - day_real)::numeric / day_real) * 100, 1) ELSE 0 END AS percent_plan_day\n    FROM latest_data\n)\nSELECT\n    'Anual ' AS categoria,\n    CASE WHEN percent_aa_year > 0 THEN '+' || percent_aa_year::text || '% ▲' WHEN percent_aa_year < 0 THEN percent_aa_year::text || '% ▼' ELSE '0.0%' END AS \"Porcentaje AA\",\n    real_aa_year AS \"Real AA\",\n    CASE WHEN percent_plan_year > 0 THEN '+' || percent_plan_year::text || '% ▲' WHEN percent_plan_year < 0 THEN percent_plan_year::text || '% ▼' ELSE '0.0%' END AS \"Porcentaje Plan\",\n    plan_year AS \"Plan\",\n    real_year AS \"Real\",\n    formated_date\nFROM calculated_values\n\nUNION ALL\n\nSELECT\n    'Mensual ' AS categoria,\n    CASE WHEN percent_aa_month > 0 THEN '+' || percent_aa_month::text || '% ▲' WHEN percent_aa_month < 0 THEN percent_aa_month::text || '% ▼' ELSE '0.0%' END AS \"Porcentaje AA\",\n    real_aa_month AS \"Real AA\",\n    CASE WHEN percent_plan_month > 0 THEN '+' || percent_plan_month::text || '% ▲' WHEN percent_plan_month < 0 THEN percent_plan_month::text || '% ▼' ELSE '0.0%' END AS \"Porcentaje Plan\",\n    plan_month AS \"Plan\",\n    real_month AS \"Real\",\n    formated_date\nFROM calculated_values\n\nUNION ALL\n\nSELECT\n    'Diario ' AS categoria,\n    CASE WHEN percent_aa_day > 0 THEN '+' || percent_aa_day::text || '% ▲' WHEN percent_aa_day < 0 THEN percent_aa_day::text || '% ▼' ELSE '0.0%' END AS \"Porcentaje AA\",\n    real_aa_day AS \"Real AA\",\n    CASE WHEN percent_plan_day > 0 THEN '+' || percent_plan_day::text || '% ▲' WHEN percent_plan_day < 0 THEN percent_plan_day::text || '% ▼' ELSE '0.0%' END AS \"Porcentaje Plan\",\n    plan_day AS \"Plan\",\n    real_day AS \"Real\",\n    formated_date\nFROM calculated_values;",
           "refId": "A",
           "scenarioId": "csv_content",
           "sql": {
@@ -405,6 +342,7 @@
           "refId": "A"
         }
       ],
+      "title": "",
       "transformations": [
         {
           "id": "formatTime",
@@ -597,6 +535,7 @@
           "withTransforms": true
         }
       ],
+      "title": "",
       "transformations": [
         {
           "id": "organize",
@@ -627,6 +566,10 @@
       "type": "table"
     },
     {
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
       "gridPos": {
         "h": 2,
         "w": 15,
@@ -644,10 +587,12 @@
         "mode": "html"
       },
       "pluginVersion": "12.1.1",
+      "title": "",
       "transparent": true,
       "type": "text"
     }
   ],
+  "preload": false,
   "schemaVersion": 41,
   "tags": [],
   "templating": {
@@ -679,6 +624,5 @@
   "timezone": "browser",
   "title": "Dashboard de Consumo por HDO",
   "uid": "ea1888b2-fe8e-4d7b-b0d7-46107955e0c3",
-  "version": 1,
-  "weekStart": ""
+  "version": 3
 }
