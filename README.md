@@ -37,7 +37,7 @@ Sistema de visualización de consumos energéticos para el [Hotel Nacional de Cu
 ## Tecnologías
 
 - **Grafana** - Visualización
-- **PostgreSQL** - Base de datos
+- **PostgreSQL** - Base de datos, la estructura se encuentra en [este documento](./docs/Estructura_tabla_PostgreSQL.md)
 - **JSON** - Configuración dashboards
 
 ## Instalación y Uso
