@@ -3,7 +3,13 @@ apiVersion: 1
 datasources:
   - name: grafana-postgresql-datasource
     type: postgres
+    access: proxy
+    url: postgres
+    isDefault: true
     editable: true
+    jsonData:
+      database: gemelluxdb
+      sslmode: "disable"
 
   - name: grafana-testdata-datasource
     type: testdata
