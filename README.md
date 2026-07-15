@@ -6,7 +6,7 @@
 
 Sistema de visualización de consumos energéticos para el [Hotel Nacional de Cuba](https://elhotelnacionaldecuba.com/). Monitorea en tiempo real el consumo de electricidad, agua, gas y diesel, con alertas de cobertura.
 
-> [!note] 
+> [!note]
 > _Este proyecto no posee información sensible ni expone el funcionamiento interno de la institución, solo posee la visualización y diseños sugeridos con consultas a una database mockeada_
 
 ## Dashboards
@@ -40,12 +40,48 @@ Sistema de visualización de consumos energéticos para el [Hotel Nacional de Cu
 - **PostgreSQL** - Base de datos
 - **JSON** - Configuración dashboards
 
-## Instalación
+## Instalación y Uso
 
-> Explicación detallada en [este documento](./docs/Importación_en_grafana.md)
+Este repositorio está configurado para desplegarse automáticamente mediante **Grafana Provisioning**. No es necesario importar los JSONs manualmente desde la UI.
 
-1. Importar JSONs en Grafana o definir la carpeta `grafana/` como Provisioning
-2. Configurar datasource PostgreSQL
+### Docker Compose
+
+Puedes levantar el entorno montando la carpeta `provisioning/` directamente en el contenedor de Grafana:
+
+```yaml
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: gemellux
+      POSTGRES_PASSWORD: gemellux
+      POSTGRES_DB: gemelluxdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      # Monta la carpeta de provisioning/ local en el contenedor
+      - ./provisioning:/etc/grafana/provisioning
+
+volumes:
+  postgres_data:
+```
+
+### Configuración del Datasource
+
+El archivo `provisioning/datasources/default.yml` ya incluye la configuración para el datasource de PostgreSQL (`grafana-postgresql-datasource`).
+
+> [!important]
+> Asegúrate de que tu instancia de PostgreSQL tenga cargada la base de datos con la tabla `gemelluxiot.x002fconsumptionobserved` para que las consultas SQL de los dashboards funcionen correctamente.
 
 ---
 
