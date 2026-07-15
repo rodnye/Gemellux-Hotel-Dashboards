@@ -42,7 +42,7 @@ Sistema de visualización de consumos energéticos para el [Hotel Nacional de Cu
 
 ## Instalación y Uso
 
-Este repositorio está configurado para desplegarse automáticamente mediante **Grafana Provisioning**. No es necesario importar los JSONs manualmente desde la UI.
+Este repositorio está configurado para desplegarse automáticamente mediante [**Grafana Provisioning**](https://grafana.com/tutorials/provision-dashboards-and-data-sources). No es necesario importar los JSONs manualmente desde la UI.
 
 ### Docker Compose
 
