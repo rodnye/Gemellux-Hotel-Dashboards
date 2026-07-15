@@ -143,7 +143,7 @@
           "format": "table",
           "hide": false,
           "rawQuery": true,
-          "rawSql": "\n    WITH parsed AS (\n        SELECT\n\t\t    -- los datos vienen en milisegundos, asi que se castea a bigint y se lleva a segundos\n            to_timestamp((o.recvtimets)::bigint / 1000) AS recvtimets,\n            o.dateobserved::date AS dateobserved,\n            c AS carrier\n        FROM gemelluxiot.x002fconsumptionobserved o\n        CROSS JOIN LATERAL \n\t\t  -- el json viene de tipo string, asi que se castea\n\t\t  jsonb_array_elements(o.carriers::jsonb) AS c\n        WHERE \n                c ->> 'carrierType' = '$carrier_type' \n            AND dateobserved::date BETWEEN \n                    to_timestamp($__from / 1000)::date\n                AND to_timestamp($__to / 1000)::date\n    )\n    SELECT\n        (carrier ->> 'coverage')::int AS coverage,\n        ((carrier ->> 'coverage')::int * 100.0 / ('$required_coverage')) AS percent,\n        (carrier ->> 'unit') AS unit,\n        recvtimets,\n        dateobserved\n    FROM parsed\n    ORDER BY recvtimets;\n",
+          "rawSql": "SELECT\n    coverage,\n    unit,\n    (coverage::numeric * 100.0 / NULLIF($required_coverage::numeric, 0)) AS percent,\n    date_observed\nFROM consumption_data\nWHERE carrier_type = '$carrier_type'\n  AND date_observed BETWEEN to_timestamp($__from / 1000)::date \n                        AND to_timestamp($__to / 1000)::date\nORDER BY date_observed;",
           "refId": "S",
           "sql": {
             "columns": [
@@ -1240,5 +1240,5 @@
   "timezone": "America/Havana",
   "title": "Dashboard de Cobertura",
   "uid": "903f49d3-a473-4f87-87b8-5ded625220e1",
-  "version": 3
+  "version": 4
 }
