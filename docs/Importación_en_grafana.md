@@ -1,7 +1,7 @@
 # (deprecated) Importación de Dashboards en Grafana para el Hotel Nacional
 
 > [!warning]
-> En desuso este método para este proyecto. Revisar importación mediante [Grafana Provisioning](../README.md#instalación-y-uso) 
+> En desuso este método para este proyecto. Revisar importación mediante [Grafana Provisioning](../README.md#instalación-y-uso)
 
 **Fecha:** 2026-01-11  
 **Autor:** Rodny R. Estrada León
