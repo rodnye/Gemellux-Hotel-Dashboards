@@ -1,4 +1,4 @@
-# Importación de Dashboards en Grafana para el Hotel Nacional 
+# Importación de Dashboards en Grafana para el Hotel Nacional
 
 **Fecha:** 2026-01-11  
 **Autor:** Rodny R. Estrada León
