@@ -1,0 +1,9 @@
+apiVersion: 1
+
+datasources:
+  - name: grafana-postgresql-datasource
+    type: postgres
+    editable: true
+
+  - name: grafana-testdata-datasource
+    type: testdata
